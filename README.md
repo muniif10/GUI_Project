@@ -2,6 +2,5 @@
 > - Purpose: To develop GUI program that have marketability value
 > - Brainstorming ideas, UML
 
-![jermey](jeremy.jpg)
 
 ## Brainstorming Ideas
