@@ -24,19 +24,19 @@
                <content>
                   <BorderPane prefHeight="402.0" prefWidth="638.0">
                      <center>
-                        <TableView prefHeight="390.0" prefWidth="613.0" styleClass="lmao" BorderPane.alignment="CENTER">
+                        <TableView fx:id="itemTable" prefHeight="390.0" prefWidth="613.0" styleClass="lmao" BorderPane.alignment="CENTER">
                           <columns>
-                            <TableColumn prefWidth="95.2000122666359" text="Bid Item No." />
-                            <TableColumn prefWidth="163.20001220703125" text="Name" />
-                              <TableColumn prefWidth="268.79998779296875" text="Description" />
-                              <TableColumn prefWidth="112.79998779296875" text="Highest Bid" />
+                            <TableColumn fx:id="noCol" prefWidth="95.2000122666359" text="Bid Item No." />
+                            <TableColumn fx:id="nameCol" prefWidth="163.20001220703125" text="Name" />
+                              <TableColumn fx:id="descCol" prefWidth="247.2000732421875" text="Description" />
+                              <TableColumn fx:id="highCol" prefWidth="134.39990234375" text="Highest Bid" />
                           </columns>
                         </TableView>
                      </center>
                      <bottom>
                         <ButtonBar disable="true" prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                           <buttons>
-                            <Button mnemonicParsing="false" text="Bid" />
+                            <Button fx:id="bidButton" mnemonicParsing="false" text="Bid" />
                           </buttons>
                         </ButtonBar>
                      </bottom>
@@ -51,14 +51,14 @@
                <center>
                   <HBox prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                      <children>
-                        <VBox alignment="CENTER" prefHeight="381.0" prefWidth="534.0">
+                        <VBox fx:id="leftInfoBid" alignment="CENTER" prefHeight="381.0" prefWidth="534.0">
                            <children>
                               <Text fx:id="itemName2" strokeType="OUTSIDE" strokeWidth="0.0" text="ITEM_NAME" />
                               <ImageView fx:id="imageUsed" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
                               <Text fx:id="description" strokeType="OUTSIDE" strokeWidth="0.0" text="Text" />
                            </children>
                         </VBox>
-                        <VBox alignment="CENTER" prefHeight="383.0" prefWidth="534.0">
+                        <VBox fx:id="rightInfoBid" alignment="CENTER" prefHeight="383.0" prefWidth="534.0">
                            <children>
                               <Text fx:id="itemName" strokeType="OUTSIDE" strokeWidth="0.0" text="ITEM_NAME" />
                               <Text fx:id="currentBid" strokeType="OUTSIDE" strokeWidth="0.0" text="CURRENT BID" />

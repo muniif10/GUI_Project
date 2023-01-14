@@ -86,7 +86,7 @@ public class loginPageController {
 
 //            Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getClassLoader().getResource("UserListView.fxml")));
             UserListViewController controller = loader.getController();
-            controller.initData(userLoggedIn);
+            controller.initData(userLoggedIn, con);
             stage.setTitle("Bidding View");
 
 //            Scene scene = new Scene(root);
@@ -95,6 +95,7 @@ public class loginPageController {
             stage.show();
 
         } else if (hasOutput && (accType != userSelection)) { // Host
+            // Belum adjust for data transfer through scenes controller
             User userLoggedIn = new User();
             userLoggedIn.username = result.getString("username");
             userLoggedIn.ID = String.valueOf(result.getInt(3));
@@ -104,11 +105,7 @@ public class loginPageController {
             stage.close();
 
             Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getClassLoader().getResource("dd.fxml")));
-            // Step 2
 
-            // Step 3
-
-            // Step 4
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.setTitle("Host Bidding View");
