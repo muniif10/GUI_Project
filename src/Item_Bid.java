@@ -1,18 +1,17 @@
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.ObservableList;
 import javafx.scene.image.ImageView;
 
+import java.io.Serializable;
 
-public class Item_Bid {
+
+public class Item_Bid implements Serializable {
     private final SimpleStringProperty itemID;
     private ObjectProperty<ImageView> photo;
     private final SimpleStringProperty name;
     private final SimpleStringProperty description;
     private final SimpleStringProperty highest_bid;
-    private SimpleListProperty<String[]> history = new SimpleListProperty<>(); // String array stores Name and amount
 
     public Item_Bid(String itemID, String name, String description, String highest_bid) {
         this.itemID = new SimpleStringProperty(itemID);
@@ -26,7 +25,6 @@ public class Item_Bid {
         this.name = new SimpleStringProperty(name);
         this.description = new SimpleStringProperty(description);
         this.highest_bid = new SimpleStringProperty(highest_bid);
-        this.history = new SimpleListProperty<>();
         this.photo = new SimpleObjectProperty<>(image);
     }
 
@@ -86,15 +84,9 @@ public class Item_Bid {
         return highest_bid;
     }
 
-    public ObservableList<String[]> getHistory() {
-        return history.get();
-    }
 
-    public void setHistory(ObservableList<String[]> history) {
-        this.history.set(history);
-    }
 
-    public SimpleListProperty<String[]> historyProperty() {
-        return history;
-    }
+
+
+
 }
