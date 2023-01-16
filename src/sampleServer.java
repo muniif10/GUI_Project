@@ -46,28 +46,34 @@ public class sampleServer {
         broadcast.start();
 
         Thread continuousConnect = new Thread(()->{
-            try{
-                ServerSocket serverSocket = new ServerSocket(5454);
-                Socket client = serverSocket.accept();
-                System.out.println("Received new connection");
-                System.out.println("Connected to client "+ client.getInetAddress().getHostAddress());
-                new Thread(()->{
-                    ObservableList<Item_Bid> olList = FXCollections.observableArrayList();
-                    olList.add(new Item_Bid("01","Daiki's ","los","200"));
-                    ArrayList<ArrayList<Object>> damnList = convertListToArrayList(olList);
-                    try {
-                        ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
-                        out.writeUnshared(damnList);
+            while (true) {
+                try {
+                    ServerSocket serverSocket = new ServerSocket(5454);
+                    Socket client = serverSocket.accept();
+                    System.out.println("Received new connection");
+                    System.out.println("Connected to client " + client.getInetAddress().getHostAddress());
+                    new Thread(() -> {
+                        ObservableList<Item_Bid> olList = FXCollections.observableArrayList();
+                        olList.add(new Item_Bid("01", "Daiki's ", "los", "200"));
+                        ArrayList<ArrayList<Object>> damnList = convertListToArrayList(olList);
+                        try {
+                            ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
+                            out.writeUnshared(damnList);
 
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }).start();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }).start();
 
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
+                } catch (Exception ignored) {
+
+                }
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }});
         continuousConnect.start();
         System.out.println("Done all things now");
     }
@@ -81,7 +87,7 @@ public class sampleServer {
         packet = new DatagramPacket(buf, buf.length, group, 4545);
         socket.send(packet);
         socket.close();
-        Thread.sleep(5000);
+        Thread.sleep(100);
 
     }
 }

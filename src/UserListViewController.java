@@ -66,28 +66,47 @@ public class UserListViewController {
     @FXML
     private Text yourBid;
 
+    public static ObservableList<Item_Bid> regenerateList(ArrayList<ArrayList<Object>> oldList) {
+        ObservableList<Item_Bid> newList = FXCollections.observableArrayList();
+        for (int i = 0; i < oldList.size(); i++) {
+            if (oldList.get(i).size() > 4) {
+                newList.add(new Item_Bid((String) oldList.get(i).get(0), (String) oldList.get(i).get(1), (String) oldList.get(i).get(2), (String) oldList.get(i).get(3), (ImageView) oldList.get(i).get(4)));
+
+            } else {
+                newList.add(new Item_Bid((String) oldList.get(i).get(0), (String) oldList.get(i).get(1), (String) oldList.get(i).get(2), (String) oldList.get(i).get(3)));
+            }
+
+        }
+        return newList;
+
+    }
+
     public void initData(User user, Connection con) {
         this.con = con;
         username.setText("Name: " + user.getUsername());
         currentUser = user;
     }
 
-public void startConnection() throws IOException, ClassNotFoundException {
-    String serverIP;
-    int serverPort;
-    System.out.println("Trying to read multicast");
-    try (MulticastSocket mult = new MulticastSocket(4545)) { // Create a socket to receive multicast packet
-        InetAddress group = InetAddress.getByName("224.0.0.1"); // Create the multicast address group
-        byte[] buf = new byte[1024]; // Data to be transfered inside the packet, can be smaller
-        mult.joinGroup(group); // Assign the multicast socket to the multicast address group
-        DatagramPacket packet = new DatagramPacket(buf, buf.length); // The packet to be used to store the multicast packet
-        mult.receive(packet); // Awaits the packet
-        serverIP = packet.getAddress().getHostAddress(); // Store the server
-        mult.close(); // Close
-//            System.out.println("Connecting...");
+    public void startConnection() throws IOException, ClassNotFoundException {
+        String serverIP;
+        int serverPort;
+        System.out.println("Trying to read multicast");
+        try (MulticastSocket mult = new MulticastSocket(4545)) { // Create a socket to receive multicast packet
+            InetAddress group = InetAddress.getByName("224.0.0.1"); // Create the multicast address group
+            byte[] buf = new byte[1024]; // Data to be transfered inside the packet, can be smaller
+            mult.joinGroup(group); // Assign the multicast socket to the multicast address group
+            DatagramPacket packet = new DatagramPacket(buf, buf.length); // The packet to be used to store the multicast packet
+            mult.receive(packet); // Awaits the packet
+            serverIP = packet.getAddress().getHostAddress(); // Store the server
+            mult.close(); // Close
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+
         socket = new Socket(serverIP, 5454);
         System.out.println("Connected.");
-        new Thread(()->{
+        new Thread(() -> {
             System.out.println("Starting to read from server");
             ObjectInputStream objectInputStream = null;
             try {
@@ -114,39 +133,18 @@ public void startConnection() throws IOException, ClassNotFoundException {
         }).start();
 
 
-
-}
-catch (IOException e) {
-        e.printStackTrace();
-        throw new RuntimeException(e);
     }
 
-    }
-    public static ObservableList<Item_Bid> regenerateList( ArrayList<ArrayList<Object>> oldList){
-        ObservableList<Item_Bid> newList = FXCollections.observableArrayList();
-        for (int i = 0; i <  oldList.size(); i++) {
-        if (oldList.get(i).size() > 4){
-            newList.add(new Item_Bid((String)oldList.get(i).get(0),(String)oldList.get(i).get(1),(String)oldList.get(i).get(2),(String)oldList.get(i).get(3),(ImageView) oldList.get(i).get(4)));
-
-        }
-        else {
-            newList.add(new Item_Bid((String)oldList.get(i).get(0),(String)oldList.get(i).get(1),(String)oldList.get(i).get(2),(String)oldList.get(i).get(3)));
-        }
-
-        }
-        return newList;
-
-    }
     @FXML
     void initialize() throws IOException, ClassNotFoundException {
-        new Thread(()->{
-           while (true){
-               try {
-                   startConnection();
-               } catch (IOException | ClassNotFoundException e) {
-                   throw new RuntimeException(e);
-               }
-           }
+        new Thread(() -> {
+
+            try {
+                startConnection();
+            } catch (IOException | ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+
         }).start();
 
 //        ObservableList<Item_Bid> list = FXCollections.observableArrayList(regenerateList(listFromServer));
