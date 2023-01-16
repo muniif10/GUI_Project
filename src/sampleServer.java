@@ -53,7 +53,7 @@ public class sampleServer {
                 System.out.println("Connected to client "+ client.getInetAddress().getHostAddress());
                 new Thread(()->{
                     ObservableList<Item_Bid> olList = FXCollections.observableArrayList();
-                    olList.add(new Item_Bid("01","Menni","los","200"));
+                    olList.add(new Item_Bid("01","Daiki's ","los","200"));
                     ArrayList<ArrayList<Object>> damnList = convertListToArrayList(olList);
                     try {
                         ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
