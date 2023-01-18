@@ -26,10 +26,11 @@
                      <center>
                         <TableView fx:id="itemTable" prefHeight="390.0" prefWidth="613.0" styleClass="lmao" BorderPane.alignment="CENTER">
                           <columns>
-                            <TableColumn fx:id="noCol" prefWidth="95.2000122666359" text="Bid Item No." />
-                            <TableColumn fx:id="nameCol" prefWidth="163.20001220703125" text="Name" />
-                              <TableColumn fx:id="descCol" prefWidth="247.2000732421875" text="Description" />
-                              <TableColumn fx:id="highCol" prefWidth="134.39990234375" text="Highest Bid" />
+                            <TableColumn fx:id="noCol" prefWidth="95.19997864961624" text="Bid Item No." />
+                            <TableColumn fx:id="nameCol" prefWidth="156.0" text="Name" />
+                              <TableColumn fx:id="descCol" prefWidth="167.2000274658203" text="Description" />
+                              <TableColumn fx:id="highCol" prefWidth="104.800048828125" text="Highest Bid" />
+                              <TableColumn fx:id="photoCol" prefWidth="115.99993896484375" text="Column X" visible="false" />
                           </columns>
                         </TableView>
                      </center>
@@ -53,18 +54,21 @@
                      <children>
                         <VBox fx:id="leftInfoBid" alignment="CENTER" prefHeight="381.0" prefWidth="534.0">
                            <children>
-                              <Text fx:id="itemName2" strokeType="OUTSIDE" strokeWidth="0.0" text="ITEM_NAME" />
+                              <Text fx:id="itemName2" strokeType="OUTSIDE" strokeWidth="0.0" text="No Item Selected">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font></Text>
                               <ImageView fx:id="imageUsed" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
-                              <Text fx:id="description" strokeType="OUTSIDE" strokeWidth="0.0" text="Text" />
+                              <Text fx:id="description" strokeType="OUTSIDE" strokeWidth="0.0" text="No Item Selected" />
                            </children>
                         </VBox>
                         <VBox fx:id="rightInfoBid" alignment="CENTER" prefHeight="383.0" prefWidth="534.0">
                            <children>
-                              <Text fx:id="itemName" strokeType="OUTSIDE" strokeWidth="0.0" text="ITEM_NAME" />
+                              <Text fx:id="itemName" strokeType="OUTSIDE" strokeWidth="0.0" text="No Item Selected" />
                               <Text fx:id="currentBid" strokeType="OUTSIDE" strokeWidth="0.0" text="CURRENT BID" />
                               <Text fx:id="yourBid" strokeType="OUTSIDE" strokeWidth="0.0" text="YOUR BID" />
                               <TextField />
-                              <Button mnemonicParsing="false" text="Button" />
+                              <Button mnemonicParsing="false" text="Bid" />
                            </children>
                         </VBox>
                      </children>

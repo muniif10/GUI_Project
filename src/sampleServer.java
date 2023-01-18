@@ -55,6 +55,7 @@ public class sampleServer {
                     new Thread(() -> {
                         ObservableList<Item_Bid> olList = FXCollections.observableArrayList();
                         olList.add(new Item_Bid("01", "Daiki's ", "los", "200"));
+                        olList.add(new Item_Bid("02","Minecraft","Damn","80"));
                         ArrayList<ArrayList<Object>> damnList = convertListToArrayList(olList);
                         try {
                             ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
@@ -62,6 +63,11 @@ public class sampleServer {
 
                         } catch (IOException e) {
                             throw new RuntimeException(e);
+                        }
+                    }).start();
+                    new Thread(()->{ // Continuous read from client
+                        while (true){ // Also need a thread for continuous write client.
+                            
                         }
                     }).start();
 

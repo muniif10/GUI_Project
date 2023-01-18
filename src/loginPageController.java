@@ -1,3 +1,4 @@
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -93,9 +94,11 @@ public class loginPageController {
 //            stage.setTitle("Bidding View");
 //            stage.setScene(scene);
             stage.show();
+            stage.setOnCloseRequest(da -> {
+                Platform.exit();
+            });
 
         } else if (hasOutput && (accType != userSelection)) { // Host
-            // Belum adjust for data transfer through scenes controller
             User userLoggedIn = new User();
             userLoggedIn.username = result.getString("username");
             userLoggedIn.ID = String.valueOf(result.getInt(3));
@@ -103,13 +106,22 @@ public class loginPageController {
             Node node = (Node) event.getSource();
             Stage stage = (Stage) node.getScene().getWindow();
             stage.close();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("AdminListView.fxml"));
+            stage.setScene(new Scene(loader.load()));
 
-            Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getClassLoader().getResource("dd.fxml")));
 
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
-            stage.setTitle("Host Bidding View");
+//            Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getClassLoader().getResource("UserListView.fxml")));
+            AdminListViewController controller = loader.getController();
+            controller.initData(userLoggedIn, con);
+            stage.setTitle("Admin View");
+
+//            Scene scene = new Scene(root);
+//            stage.setTitle("Bidding View");
+//            stage.setScene(scene);
             stage.show();
+            stage.setOnCloseRequest(da -> {
+                Platform.exit();
+            });
 
         } else {
             username.setStyle("-fx-background-color: red");

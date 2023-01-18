@@ -1,3 +1,4 @@
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -12,6 +13,7 @@ import javafx.scene.text.Text;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -24,6 +26,7 @@ public class UserListViewController {
     User currentUser;
     Connection con;
     Socket socket;
+    ObjectInputStream objectInputStream;
     List<Item_Bid> listNew;
     ArrayList<ArrayList<Object>> listFromServer;
     private String serverIP;
@@ -65,6 +68,8 @@ public class UserListViewController {
     private Text username;
     @FXML
     private Text yourBid;
+    @FXML
+    private TableColumn<Item_Bid, ImageView> photoCol;
 
     public static ObservableList<Item_Bid> regenerateList(ArrayList<ArrayList<Object>> oldList) {
         ObservableList<Item_Bid> newList = FXCollections.observableArrayList();
@@ -91,6 +96,7 @@ public class UserListViewController {
         String serverIP;
         int serverPort;
         System.out.println("Trying to read multicast");
+
         try (MulticastSocket mult = new MulticastSocket(4545)) { // Create a socket to receive multicast packet
             InetAddress group = InetAddress.getByName("224.0.0.1"); // Create the multicast address group
             byte[] buf = new byte[1024]; // Data to be transfered inside the packet, can be smaller
@@ -98,28 +104,26 @@ public class UserListViewController {
             DatagramPacket packet = new DatagramPacket(buf, buf.length); // The packet to be used to store the multicast packet
             mult.receive(packet); // Awaits the packet
             serverIP = packet.getAddress().getHostAddress(); // Store the server
-            mult.close(); // Close
+            mult.leaveGroup(group);
+            // Close
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
 
         socket = new Socket(serverIP, 5454);
-        System.out.println("Connected.");
-        new Thread(() -> {
+        System.out.println("Connected."+ socket.getInetAddress().getHostAddress());
+        System.out.println(socket.getInputStream().toString());
+        Thread retrieve = new Thread(() -> {
             System.out.println("Starting to read from server");
-            ObjectInputStream objectInputStream = null;
+
             try {
                 objectInputStream = new ObjectInputStream(socket.getInputStream());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+
             System.out.println("Reading");
-            try {
+
                 listFromServer = (ArrayList<ArrayList<Object>>) objectInputStream.readUnshared();
-            } catch (IOException | ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
+
             System.out.println(listFromServer.get(0).get(0));
             System.out.println("Read");
             ObservableList<Item_Bid> list = FXCollections.observableArrayList(regenerateList(listFromServer));
@@ -129,14 +133,46 @@ public class UserListViewController {
             descCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getDescription()));
             noCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getItemID()));
             highCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getHighest_bid()));
-            itemTable.getSelectionModel().getSelectedItem();
-        }).start();
+            photoCol.setCellValueFactory(f->new SimpleObjectProperty<>(f.getValue().getPhoto()));
+//            itemTable.getSelectionModel().getSelectedItem();
 
+            } catch (IOException | ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        retrieve.start();
+        Runnable retrieveContinuous = () -> {
+            try {
+                retrieve.join();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+//                objectInputStream = new ObjectInputStream(socket.getInputStream());
+                listFromServer = (ArrayList<ArrayList<Object>>) objectInputStream.readUnshared();
+                System.out.println("Read");
+                ObservableList<Item_Bid> list = FXCollections.observableArrayList(regenerateList(listFromServer));
+                itemTable.setItems(list);
+
+            } catch (IOException | ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        };
+        new Thread(()->{ // Thread to continuously update the list
+            while(true){
+                try {
+                    retrieveContinuous.run();
+                    Thread.sleep(1000);
+                } catch (InterruptedException ignored) {
+
+                }
+            }
+        }).start();
 
     }
 
     @FXML
-    void initialize() throws IOException, ClassNotFoundException {
+    void initialize() {
         new Thread(() -> {
 
             try {
@@ -147,13 +183,5 @@ public class UserListViewController {
 
         }).start();
 
-//        ObservableList<Item_Bid> list = FXCollections.observableArrayList(regenerateList(listFromServer));
-////        Item_Bid item1 = new Item_Bid("1", "Daiki's Bike", "Renowned bike of daiki", "50");
-//        itemTable.setItems(list);
-//        nameCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getName()));
-//        descCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getDescription()));
-//        noCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getItemID()));
-//        highCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getHighest_bid()));
-//        itemTable.getSelectionModel().getSelectedItem();
     }
 }
