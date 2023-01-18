@@ -11,9 +11,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -26,7 +24,6 @@ public class UserListViewController {
     User currentUser;
     Connection con;
     Socket socket;
-    ObjectInputStream objectInputStream;
     List<Item_Bid> listNew;
     ArrayList<ArrayList<Object>> listFromServer;
     private String serverIP;
@@ -70,6 +67,8 @@ public class UserListViewController {
     private Text yourBid;
     @FXML
     private TableColumn<Item_Bid, ImageView> photoCol;
+    DataOutputStream dataOutputStream;
+    ObjectInputStream objectInputStream;
 
     public static ObservableList<Item_Bid> regenerateList(ArrayList<ArrayList<Object>> oldList) {
         ObservableList<Item_Bid> newList = FXCollections.observableArrayList();
@@ -92,7 +91,7 @@ public class UserListViewController {
         currentUser = user;
     }
 
-    public void startConnection() throws IOException, ClassNotFoundException {
+    public void startConnection() throws IOException, ClassNotFoundException, InterruptedException {
         String serverIP;
         int serverPort;
         System.out.println("Trying to read multicast");
@@ -113,71 +112,67 @@ public class UserListViewController {
 
         socket = new Socket(serverIP, 5454);
         System.out.println("Connected."+ socket.getInetAddress().getHostAddress());
-        System.out.println(socket.getInputStream().toString());
-        Thread retrieve = new Thread(() -> {
-            System.out.println("Starting to read from server");
 
-            try {
-                objectInputStream = new ObjectInputStream(socket.getInputStream());
+        dataOutputStream = new DataOutputStream(socket.getOutputStream());
+        objectInputStream = new ObjectInputStream(socket.getInputStream());
 
-            System.out.println("Reading");
+        nameCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getName()));
+        descCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getDescription()));
+        noCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getItemID()));
+        highCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getHighest_bid()));
+        photoCol.setCellValueFactory(f->new SimpleObjectProperty<>(f.getValue().getPhoto()));
 
-                listFromServer = (ArrayList<ArrayList<Object>>) objectInputStream.readUnshared();
-
-            System.out.println(listFromServer.get(0).get(0));
-            System.out.println("Read");
-            ObservableList<Item_Bid> list = FXCollections.observableArrayList(regenerateList(listFromServer));
-//        Item_Bid item1 = new Item_Bid("1", "Daiki's Bike", "Renowned bike of daiki", "50");
-            itemTable.setItems(list);
-            nameCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getName()));
-            descCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getDescription()));
-            noCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getItemID()));
-            highCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getHighest_bid()));
-            photoCol.setCellValueFactory(f->new SimpleObjectProperty<>(f.getValue().getPhoto()));
-//            itemTable.getSelectionModel().getSelectedItem();
-
-            } catch (IOException | ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        retrieve.start();
-        Runnable retrieveContinuous = () -> {
-            try {
-                retrieve.join();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            try {
-//                objectInputStream = new ObjectInputStream(socket.getInputStream());
-                listFromServer = (ArrayList<ArrayList<Object>>) objectInputStream.readUnshared();
-                System.out.println("Read");
-                ObservableList<Item_Bid> list = FXCollections.observableArrayList(regenerateList(listFromServer));
-                itemTable.setItems(list);
-
-            } catch (IOException | ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        };
-        new Thread(()->{ // Thread to continuously update the list
-            while(true){
-                try {
-                    retrieveContinuous.run();
-                    Thread.sleep(1000);
-                } catch (InterruptedException ignored) {
-
-                }
-            }
-        }).start();
+        while(true){
+            Thread.sleep(5000);
+            getItemLists();
+        }
 
     }
+int updateSentinel = 0;
+
+
+void getItemLists() throws IOException, ClassNotFoundException {
+        if (socket.isConnected()){
+            dataOutputStream.writeInt(1);
+            int newVersion = new DataInputStream(socket.getInputStream()).readInt();
+            System.out.println("Old value " + updateSentinel + "\n New Value " + newVersion);
+            if (updateSentinel == 0){ // Case of first time being sent
+                var serverList =(ArrayList<ArrayList<Object>>) objectInputStream.readUnshared();
+                updateSentinel = newVersion;
+                itemTable.setItems(regenerateList(serverList));
+            } else if (updateSentinel == newVersion) {
+                objectInputStream.readUnshared();
+
+                return;
+            }else {
+                var serverList =(ArrayList<ArrayList<Object>>) objectInputStream.readUnshared();
+                itemTable.setItems(regenerateList(serverList));
+                updateSentinel = newVersion;
+            }
+        }
+}
 
     @FXML
     void initialize() {
+    bidButton.setOnAction(event -> {
+
+    });
+        itemTable.setOnMouseClicked((e)->{
+            var item = itemTable.getSelectionModel().getSelectedItem();
+            itemName.setText(item.getName());
+            itemName2.setText(item.getName());
+            description.setText(item.getDescription());
+            currentBid.setText(item.getHighest_bid());
+            yourBid.setText("Your Bid: Not yet bid");
+
+
+
+        });
         new Thread(() -> {
 
             try {
                 startConnection();
-            } catch (IOException | ClassNotFoundException e) {
+            } catch (IOException | ClassNotFoundException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
 

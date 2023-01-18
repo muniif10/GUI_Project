@@ -11,9 +11,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -27,22 +25,7 @@ public class AdminListViewController {
     ArrayList<Socket> clients = new ArrayList<>();
     User currentUser;
     Connection con;
-    //    Runnable updateConstantly = new Runnable() {
-//        @Override
-//        public void run() {
-//            for (int i = 0; i < clients.size(); i++) {
-//                var client = clients.get(i);
-//                try {
-//                    ObjectOutputStream objectOutputStream = new ObjectOutputStream(client.getOutputStream());
-//                    ArrayList<ArrayList<Object>> newList = convertListToArrayList(currentList);
-//                    objectOutputStream.writeObject(newList);
-//                } catch (IOException e) {
-//                    throw new RuntimeException(e);
-//                }
-//            }
-//        }
-//
-//    };
+
     @FXML
     private Button addButton;
     @FXML
@@ -126,7 +109,7 @@ public class AdminListViewController {
         stm.setInt(1, id);
         ResultSet resultSet = stm.executeQuery();
         resultSet.next();
-        return new Item_Bid(String.valueOf(resultSet.getInt(1)), resultSet.getString(2), resultSet.getString(3), resultSet.getString(6));
+        return new Item_Bid(String.valueOf(resultSet.getInt(1)), resultSet.getString(2), resultSet.getString(4), resultSet.getString(6));
     }
 
     //    Around 6 Qs
@@ -207,80 +190,38 @@ public class AdminListViewController {
                 try {
                     Socket client = serverSocket.accept();
                     clients.add(client);
+                    new Thread(()->{
+                        try {
+                            ObjectOutputStream outputStream = new ObjectOutputStream(client.getOutputStream());
+                            DataInputStream dataInputStream = new DataInputStream(client.getInputStream());
 
-                    System.out.println("Received new connection");
-                    System.out.println("Connected to client " + client.getInetAddress().getHostAddress());
-                    new Thread(() -> {
-                        // TODO: Update the Item_Bid to allow bidding state to be stored
-                        // TODO: Modify in tandem with state, the bidder.
-                        new Thread(() -> {
-                            System.out.println("Starting read-loop");
-                            while (true) {
-                                try {
-                                    ObjectOutputStream objectOutputStream = new ObjectOutputStream(client.getOutputStream());
-                                    ArrayList<ArrayList<Object>> newList = convertListToArrayList(currentList);
-                                    objectOutputStream.writeObject(newList);
-                                    objectOutputStream.close();
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
-                                try {
-                                    Thread.sleep(2000);
-                                } catch (InterruptedException e) {
-                                    throw new RuntimeException(e);
+                            while(true){
+                                var request = dataInputStream.readInt();
+                                if(request == 0){
+//                                    Sending bid item
+                                    System.out.println(dataInputStream.readUTF());
+                                } else if (request==1) {
+//                                    Requesting latest list
+                                    ArrayList<ArrayList<Object>> data = convertListToArrayList(currentList);
+                                    new DataOutputStream(client.getOutputStream()).writeInt(data.hashCode());
+                                    outputStream.writeUnshared(data);
+
+                                    
+                                } else if (request==2) {
+//                                    Exiting the connection
+                                    
                                 }
                             }
-                        }).start();
-                        // Deals with inputStream
-                        while (true) {
-                            try {
-                                ObjectInputStream objectInputStream = new ObjectInputStream(client.getInputStream());
-
-                                ArrayList<Object> itemToUpdate = (ArrayList<Object>) objectInputStream.readUnshared();
-                                if (currentList != null) {
-                                    for (int i = 0; i < currentList.size(); i++) {
-                                        if (currentList.get(i).getItemID().equals(itemToUpdate.get(0))) {
-                                            currentList.get(i).setHighest_bid((String) itemToUpdate.get(3));
-                                        }
-                                    }
-                                }
-                                objectInputStream.close();
-                            } catch (IOException | ClassNotFoundException e) {
-                                throw new RuntimeException(e);
-                            }
-
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
                         }
-
-                        // What is being sent over and how to add it inside the list
-                        // We send item bid and update them. XXX Not possible as Item_Bid is not serializable
-                        // We send data of relation using method in UserListView.
-
                     }).start();
 
 
-//                    new Thread(() -> {
-//                        ObservableList<Item_Bid> olList = FXCollections.observableArrayList();
-//                        olList.add(new Item_Bid("01", "Daiki's ", "los", "200"));
-//                        olList.add(new Item_Bid("02","Minecraft","Damn","80"));
-//                        ArrayList<ArrayList<Object>> damnList = convertListToArrayList(olList);
-//                        try {
-//                            ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
-//                            out.writeUnshared(damnList);
-//
-//                        } catch (IOException e) {
-//                            throw new RuntimeException(e);
-//                        }
-//                    }).start();
-
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
+                }  catch (IOException e) {
                     throw new RuntimeException(e);
                 }
+
             }
         });
 

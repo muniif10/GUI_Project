@@ -2,7 +2,6 @@
 
 <?import javafx.scene.control.Accordion?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -34,13 +33,6 @@
                           </columns>
                         </TableView>
                      </center>
-                     <bottom>
-                        <ButtonBar disable="true" prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-                          <buttons>
-                            <Button fx:id="bidButton" mnemonicParsing="false" text="Bid" />
-                          </buttons>
-                        </ButtonBar>
-                     </bottom>
                   </BorderPane>
                </content>
             </ScrollPane>
@@ -68,7 +60,7 @@
                               <Text fx:id="currentBid" strokeType="OUTSIDE" strokeWidth="0.0" text="CURRENT BID" />
                               <Text fx:id="yourBid" strokeType="OUTSIDE" strokeWidth="0.0" text="YOUR BID" />
                               <TextField />
-                              <Button mnemonicParsing="false" text="Bid" />
+                              <Button fx:id="bidButton" mnemonicParsing="false" text="Bid for this item" />
                            </children>
                         </VBox>
                      </children>
