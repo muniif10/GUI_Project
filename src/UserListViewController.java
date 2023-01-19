@@ -3,10 +3,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TitledPane;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
@@ -151,20 +148,48 @@ void getItemLists() throws IOException, ClassNotFoundException {
             }
         }
 }
+Item_Bid currentItem;
+void updateLatest(){
+    for (int i = 0; i < itemTable.getItems().size(); i++) {
+        var cur = itemTable.getItems().get(i);
+        if (cur.getItemID().equals(currentItem.getItemID())){
+            currentItem = cur;
 
+        }
+    }
+}
+    @FXML
+    private TextField bidValue;
     @FXML
     void initialize() {
     bidButton.setOnAction(event -> {
-
+//         Call method to verify and send data to host.
+        updateLatest();
+        // Compare value if correct
+        if(Double.parseDouble(bidValue.getText()) > Double.parseDouble(currentItem.getHighest_bid())){
+            yourBid.setText(bidValue.getText());
+            currentItem.setHighest_bid("Your Bid: "+bidValue.getText());
+            try {
+                dataOutputStream.writeInt(0);
+                System.out.println("Sending new bid");
+                new ObjectOutputStream( socket.getOutputStream()).writeUnshared(AdminListViewController.convertItemToArrayList(currentItem));
+                System.out.println("sent objec");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     });
         itemTable.setOnMouseClicked((e)->{
-            var item = itemTable.getSelectionModel().getSelectedItem();
-            itemName.setText(item.getName());
-            itemName2.setText(item.getName());
-            description.setText(item.getDescription());
-            currentBid.setText(item.getHighest_bid());
-            yourBid.setText("Your Bid: Not yet bid");
-
+            try{
+                currentItem = itemTable.getSelectionModel().getSelectedItem();
+                itemName.setText(currentItem.getName());
+                itemName2.setText(currentItem.getName());
+                description.setText(currentItem.getDescription());
+                currentBid.setText("Current Highest Bid: "+currentItem.getHighest_bid());
+                yourBid.setText("Your Bid: Not yet bid");
+            }
+            catch (NullPointerException ignored){
+            }
 
 
         });
@@ -177,6 +202,5 @@ void getItemLists() throws IOException, ClassNotFoundException {
             }
 
         }).start();
-
     }
 }

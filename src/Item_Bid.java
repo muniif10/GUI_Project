@@ -2,7 +2,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.image.ImageView;
-
 import java.io.Serializable;
 
 
@@ -83,10 +82,5 @@ public class Item_Bid implements Serializable {
     public SimpleStringProperty highest_bidProperty() {
         return highest_bid;
     }
-
-
-
-
-
 
 }

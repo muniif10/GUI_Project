@@ -59,7 +59,7 @@
                               <Text fx:id="itemName" strokeType="OUTSIDE" strokeWidth="0.0" text="No Item Selected" />
                               <Text fx:id="currentBid" strokeType="OUTSIDE" strokeWidth="0.0" text="CURRENT BID" />
                               <Text fx:id="yourBid" strokeType="OUTSIDE" strokeWidth="0.0" text="YOUR BID" />
-                              <TextField />
+                              <TextField fx:id="bidValue" />
                               <Button fx:id="bidButton" mnemonicParsing="false" text="Bid for this item" />
                            </children>
                         </VBox>

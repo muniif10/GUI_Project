@@ -18,6 +18,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class AdminListViewController {
 
@@ -100,6 +101,7 @@ public class AdminListViewController {
         while (resultSet.next()) {
             newList.add(new Item_Bid(String.valueOf(resultSet.getInt(1)), resultSet.getString(2), resultSet.getString(3), resultSet.getString(4)));
         }
+        refreshBut.setDisable(false);
         return newList;
 
     }
@@ -145,7 +147,7 @@ public class AdminListViewController {
         listOfItems.setOnMouseClicked(event -> {
             Item_Bid select = listOfItems.getSelectionModel().getSelectedItem();
             itemNameText.setText(select.getName());
-            descriptionText.setText(select.getDescription());
+            descriptionText.setText(select.getDescription() + "\nSold at: " + select.getHighest_bid());
         });
         addButton.setOnMouseClicked((MouseEvent e) -> {
             try {
@@ -199,7 +201,21 @@ public class AdminListViewController {
                                 var request = dataInputStream.readInt();
                                 if(request == 0){
 //                                    Sending bid item
-                                    System.out.println(dataInputStream.readUTF());
+//                                    - Read ArrayList<Object>
+                                    var item =(ArrayList<Object>) new ObjectInputStream(client.getInputStream()).readUnshared();
+                                    System.out.println("Received a new bid");
+                                    var ob = new Item_Bid((String)item.get(0),(String)item.get(1),(String)item.get(2),(String)item.get(3));
+                                    PreparedStatement stm = con.prepareStatement("update item_bid set starting_price = ? where itemId = ?;");
+                                    double d = Double.parseDouble(ob.getHighest_bid());
+                                    int highest = (int) d;
+                                    System.out.println(ob.getItemID()+ " "+ highest);
+
+                                    stm.setInt(2,Integer.parseInt(ob.getItemID()));
+                                    stm.setInt(1, Integer.valueOf(highest));
+                                    stm.executeUpdate();
+                                    System.out.println("Executed update query");
+                                    currentList.setAll(getQueryItemAll());
+
                                 } else if (request==1) {
 //                                    Requesting latest list
                                     ArrayList<ArrayList<Object>> data = convertListToArrayList(currentList);
@@ -212,7 +228,7 @@ public class AdminListViewController {
                                     
                                 }
                             }
-                        } catch (IOException e) {
+                        } catch (IOException | ClassNotFoundException | SQLException e) {
                             throw new RuntimeException(e);
                         }
                     }).start();
