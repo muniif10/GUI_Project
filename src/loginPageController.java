@@ -5,7 +5,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -15,7 +14,6 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.*;
-import java.util.Objects;
 
 
 public class loginPageController {
@@ -48,6 +46,9 @@ public class loginPageController {
         if (con.isClosed()) {
             System.exit(999);
         }
+        password.setOnAction((e) -> {
+            loginBut.fire();
+        });
         items.addAll("Bidder", "Bidding Host");
         userType.setItems(items);
         userType.getSelectionModel().select(0);

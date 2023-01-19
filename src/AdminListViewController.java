@@ -18,7 +18,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class AdminListViewController {
 
@@ -26,7 +25,7 @@ public class AdminListViewController {
     ArrayList<Socket> clients = new ArrayList<>();
     User currentUser;
     Connection con;
-
+    String userID = "1";
     @FXML
     private Button addButton;
     @FXML
@@ -53,6 +52,10 @@ public class AdminListViewController {
     private Text serverConnectionLabel;
     @FXML
     private Button refreshBut;
+    @FXML
+    private Text clientMax;
+    @FXML
+    private Text soldAt;
 
     public static ArrayList<Object> convertItemToArrayList(Item_Bid item) {
         ArrayList<Object> newList = new ArrayList<>();
@@ -113,7 +116,6 @@ public class AdminListViewController {
         resultSet.next();
         return new Item_Bid(String.valueOf(resultSet.getInt(1)), resultSet.getString(2), resultSet.getString(4), resultSet.getString(6));
     }
-
     //    Around 6 Qs
 //    Total 30%
 //    What is operating system, basic instruction circle or cycle?, uniprog and multiprog, relationship between user thread and
@@ -135,6 +137,19 @@ public class AdminListViewController {
 
     @FXML
     void initialize() throws SQLException {
+        deleteBut.setOnAction(event -> {
+                    PreparedStatement stm = null;
+                    try {
+                        stm = con.prepareStatement("delete from item_bid where itemId = ? ");
+                        stm.setInt(1, Integer.parseInt(listOfItems.getSelectionModel().getSelectedItem().getItemID()));
+                        stm.executeUpdate();
+                        currentList.setAll(getQueryItemAll());
+//            currentList.remove(listOfItems.getSelectionModel().getSelectedItem());
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                });
         itemCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getName()));
         listOfItems.setItems(currentList);
         refreshBut.setOnMouseClicked((MouseEvent e) -> {
@@ -145,9 +160,27 @@ public class AdminListViewController {
             }
         });
         listOfItems.setOnMouseClicked(event -> {
+            String clientName;
             Item_Bid select = listOfItems.getSelectionModel().getSelectedItem();
+            String itemId = select.getItemID();
+            try {
+                PreparedStatement stm1 = con.prepareStatement("select userId from item_bid where itemId = ?");
+                stm1.setInt(1, Integer.parseInt(itemId));
+                ResultSet res1 = stm1.executeQuery();
+                res1.next();
+                userID = res1.getString(1);
+                PreparedStatement stm = con.prepareStatement("select display_name from credentials where userId = ? ");
+                stm.setInt(1, Integer.parseInt(userID));
+                ResultSet res = stm.executeQuery();
+                res.next();
+                clientName = res.getString(1);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
             itemNameText.setText(select.getName());
-            descriptionText.setText(select.getDescription() + "\nSold at: " + select.getHighest_bid());
+            descriptionText.setText(select.getDescription());
+            soldAt.setText("Sold at: " + select.getHighest_bid());
+            clientMax.setText("Client with highest bid: " + clientName);
         });
         addButton.setOnMouseClicked((MouseEvent e) -> {
             try {
@@ -193,40 +226,43 @@ public class AdminListViewController {
                 try {
                     Socket client = serverSocket.accept();
                     clients.add(client);
-                    new Thread(()->{
+                    new Thread(() -> {
                         try {
                             ObjectOutputStream outputStream = new ObjectOutputStream(client.getOutputStream());
                             DataInputStream dataInputStream = new DataInputStream(client.getInputStream());
 
-                            while(true){
+                            while (true) {
                                 var request = dataInputStream.readInt();
-                                if(request == 0){
+                                if (request == 0) {
 //                                    Sending bid item
 //                                    - Read ArrayList<Object>
-                                    var item =(ArrayList<Object>) new ObjectInputStream(client.getInputStream()).readUnshared();
+                                    userID = dataInputStream.readUTF();
+                                    var item = (ArrayList<Object>) new ObjectInputStream(client.getInputStream()).readUnshared();
                                     System.out.println("Received a new bid");
-                                    var ob = new Item_Bid((String)item.get(0),(String)item.get(1),(String)item.get(2),(String)item.get(3));
-                                    PreparedStatement stm = con.prepareStatement("update item_bid set starting_price = ? where itemId = ?;");
+                                    var ob = new Item_Bid((String) item.get(0), (String) item.get(1), (String) item.get(2), (String) item.get(3));
+                                    PreparedStatement stm = con.prepareStatement("update item_bid set starting_price = ?, userId = ? where itemId = ?;");
                                     double d = Double.parseDouble(ob.getHighest_bid());
                                     int highest = (int) d;
-                                    System.out.println(ob.getItemID()+ " "+ highest);
+                                    System.out.println(ob.getItemID() + " " + highest);
 
-                                    stm.setInt(2,Integer.parseInt(ob.getItemID()));
+                                    stm.setInt(3, Integer.parseInt(ob.getItemID()));
+                                    stm.setInt(2, Integer.parseInt(userID));
                                     stm.setInt(1, Integer.valueOf(highest));
                                     stm.executeUpdate();
                                     System.out.println("Executed update query");
                                     currentList.setAll(getQueryItemAll());
 
-                                } else if (request==1) {
+                                } else if (request == 1) {
 //                                    Requesting latest list
                                     ArrayList<ArrayList<Object>> data = convertListToArrayList(currentList);
                                     new DataOutputStream(client.getOutputStream()).writeInt(data.hashCode());
                                     outputStream.writeUnshared(data);
 
-                                    
-                                } else if (request==2) {
+
+                                } else if (request == 2) {
 //                                    Exiting the connection
-                                    
+
+
                                 }
                             }
                         } catch (IOException | ClassNotFoundException | SQLException e) {
@@ -235,7 +271,7 @@ public class AdminListViewController {
                     }).start();
 
 
-                }  catch (IOException e) {
+                } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
 

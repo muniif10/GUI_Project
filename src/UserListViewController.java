@@ -14,6 +14,9 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +26,10 @@ public class UserListViewController {
     Socket socket;
     List<Item_Bid> listNew;
     ArrayList<ArrayList<Object>> listFromServer;
+    DataOutputStream dataOutputStream;
+    ObjectInputStream objectInputStream;
+    int updateSentinel = 0;
+    Item_Bid currentItem;
     private String serverIP;
     @FXML
     private Text amountSpent;
@@ -64,8 +71,8 @@ public class UserListViewController {
     private Text yourBid;
     @FXML
     private TableColumn<Item_Bid, ImageView> photoCol;
-    DataOutputStream dataOutputStream;
-    ObjectInputStream objectInputStream;
+    @FXML
+    private TextField bidValue;
 
     public static ObservableList<Item_Bid> regenerateList(ArrayList<ArrayList<Object>> oldList) {
         ObservableList<Item_Bid> newList = FXCollections.observableArrayList();
@@ -108,7 +115,7 @@ public class UserListViewController {
         }
 
         socket = new Socket(serverIP, 5454);
-        System.out.println("Connected."+ socket.getInetAddress().getHostAddress());
+        System.out.println("Connected." + socket.getInetAddress().getHostAddress());
 
         dataOutputStream = new DataOutputStream(socket.getOutputStream());
         objectInputStream = new ObjectInputStream(socket.getInputStream());
@@ -117,84 +124,98 @@ public class UserListViewController {
         descCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getDescription()));
         noCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getItemID()));
         highCol.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getHighest_bid()));
-        photoCol.setCellValueFactory(f->new SimpleObjectProperty<>(f.getValue().getPhoto()));
+        photoCol.setCellValueFactory(f -> new SimpleObjectProperty<>(f.getValue().getPhoto()));
 
-        while(true){
-            Thread.sleep(5000);
+        while (true) {
+            Thread.sleep(200);
             getItemLists();
         }
 
     }
-int updateSentinel = 0;
 
-
-void getItemLists() throws IOException, ClassNotFoundException {
-        if (socket.isConnected()){
+    void getItemLists() throws IOException, ClassNotFoundException {
+        if (socket.isConnected()) {
             dataOutputStream.writeInt(1);
             int newVersion = new DataInputStream(socket.getInputStream()).readInt();
             System.out.println("Old value " + updateSentinel + "\n New Value " + newVersion);
-            if (updateSentinel == 0){ // Case of first time being sent
-                var serverList =(ArrayList<ArrayList<Object>>) objectInputStream.readUnshared();
+            if (updateSentinel == 0) { // Case of first time being sent
+                var serverList = (ArrayList<ArrayList<Object>>) objectInputStream.readUnshared();
                 updateSentinel = newVersion;
                 itemTable.setItems(regenerateList(serverList));
             } else if (updateSentinel == newVersion) {
                 objectInputStream.readUnshared();
 
-                return;
-            }else {
-                var serverList =(ArrayList<ArrayList<Object>>) objectInputStream.readUnshared();
+            } else {
+                var serverList = (ArrayList<ArrayList<Object>>) objectInputStream.readUnshared();
                 itemTable.setItems(regenerateList(serverList));
                 updateSentinel = newVersion;
             }
         }
-}
-Item_Bid currentItem;
-void updateLatest(){
-    for (int i = 0; i < itemTable.getItems().size(); i++) {
-        var cur = itemTable.getItems().get(i);
-        if (cur.getItemID().equals(currentItem.getItemID())){
-            currentItem = cur;
-
-        }
     }
-}
-    @FXML
-    private TextField bidValue;
-    @FXML
-    void initialize() {
-    bidButton.setOnAction(event -> {
-//         Call method to verify and send data to host.
-        updateLatest();
-        // Compare value if correct
-        if(Double.parseDouble(bidValue.getText()) > Double.parseDouble(currentItem.getHighest_bid())){
-            yourBid.setText("Your bid: "+bidValue.getText());
-            currentItem.setHighest_bid(bidValue.getText());
-            try {
-                dataOutputStream.writeInt(0);
-                System.out.println("Sending new bid");
-                new ObjectOutputStream( socket.getOutputStream()).writeUnshared(AdminListViewController.convertItemToArrayList(currentItem));
-                System.out.println("sent objec");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+
+    void updateLatest() {
+        for (int i = 0; i < itemTable.getItems().size(); i++) {
+            var cur = itemTable.getItems().get(i);
+            if (cur.getItemID().equals(currentItem.getItemID())) {
+                currentItem = cur;
+
             }
         }
-    });
-        itemTable.setOnMouseClicked((e)->{
-            try{
+    }
+String clientName;
+    @FXML
+    void initialize()  {
+        profile_pane.setOnMouseClicked(e->{
+            PreparedStatement stm = null;
+            try {
+                stm = con.prepareStatement("select display_name from credentials where userId = ? ");
+
+            stm.setInt(1, Integer.parseInt(currentUser.ID));
+            ResultSet res = stm.executeQuery();
+            res.next();
+            clientName = res.getString(1);
+            username.setText("Display Name: "+clientName);
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+            amountSpent.setText("");
+        });
+
+        bidButton.setOnAction(event -> {
+//         Call method to verify and send data to host.
+            updateLatest();
+            // Compare value if correct
+            if (Double.parseDouble(bidValue.getText()) > Double.parseDouble(currentItem.getHighest_bid())) {
+                yourBid.setText("Your bid: " + bidValue.getText());
+                currentItem.setHighest_bid(bidValue.getText());
+                try {
+                    dataOutputStream.writeInt(0);
+                    System.out.println("Sending new bid");
+                    dataOutputStream.writeUTF(currentUser.getId());
+                    new ObjectOutputStream(socket.getOutputStream()).writeUnshared(AdminListViewController.convertItemToArrayList(currentItem));
+                    System.out.println("sent objec");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            currentBid.setText("Current Highest Bid: " + bidValue.getText());
+            yourBid.setText("Your Bid: " + bidValue.getText());
+            bidValue.setText("");
+        });
+        itemTable.setOnMouseClicked((e) -> {
+            try {
                 currentItem = itemTable.getSelectionModel().getSelectedItem();
                 itemName.setText(currentItem.getName());
                 itemName2.setText(currentItem.getName());
                 description.setText(currentItem.getDescription());
-                currentBid.setText("Current Highest Bid: "+currentItem.getHighest_bid());
+                currentBid.setText("Current Highest Bid: " + currentItem.getHighest_bid());
                 yourBid.setText("Your Bid: Not yet bid");
-            }
-            catch (NullPointerException ignored){
+            } catch (NullPointerException ignored) {
             }
 
 
         });
         new Thread(() -> {
-
             try {
                 startConnection();
             } catch (IOException | ClassNotFoundException | InterruptedException e) {

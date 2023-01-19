@@ -2,15 +2,16 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.image.ImageView;
+
 import java.io.Serializable;
 
 
-public class Item_Bid implements Serializable {
+public class Item_Bid extends AdminListViewController implements Serializable {
     private final SimpleStringProperty itemID;
-    private ObjectProperty<ImageView> photo;
     private final SimpleStringProperty name;
     private final SimpleStringProperty description;
     private final SimpleStringProperty highest_bid;
+    private ObjectProperty<ImageView> photo;
 
     public Item_Bid(String itemID, String name, String description, String highest_bid) {
         this.itemID = new SimpleStringProperty(itemID);
@@ -42,7 +43,8 @@ public class Item_Bid implements Serializable {
     public ImageView getPhoto() {
         return photo.get();
     }
-    public void setPhoto(ImageView image){
+
+    public void setPhoto(ImageView image) {
         this.photo = new SimpleObjectProperty<>(image);
     }
 
