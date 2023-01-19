@@ -54,11 +54,11 @@
                               <Text fx:id="description" strokeType="OUTSIDE" strokeWidth="0.0" text="No Item Selected" />
                            </children>
                         </VBox>
-                        <VBox fx:id="rightInfoBid" alignment="CENTER" prefHeight="383.0" prefWidth="534.0">
+                        <VBox fx:id="rightInfoBid" alignment="CENTER" fillWidth="false" prefHeight="383.0" prefWidth="534.0">
                            <children>
-                              <Text fx:id="itemName" strokeType="OUTSIDE" strokeWidth="0.0" text="No Item Selected" />
-                              <Text fx:id="currentBid" strokeType="OUTSIDE" strokeWidth="0.0" text="CURRENT BID" />
-                              <Text fx:id="yourBid" strokeType="OUTSIDE" strokeWidth="0.0" text="YOUR BID" />
+                              <Text fx:id="itemName" strokeType="OUTSIDE" strokeWidth="0.0" text="No Item Selected" textAlignment="CENTER" />
+                              <Text fx:id="currentBid" strokeType="OUTSIDE" strokeWidth="0.0" text="CURRENT BID" textAlignment="CENTER" />
+                              <Text fx:id="yourBid" strokeType="OUTSIDE" strokeWidth="0.0" text="YOUR BID" textAlignment="CENTER" />
                               <TextField fx:id="bidValue" />
                               <Button fx:id="bidButton" mnemonicParsing="false" text="Bid for this item" />
                            </children>

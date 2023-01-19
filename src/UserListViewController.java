@@ -167,8 +167,8 @@ void updateLatest(){
         updateLatest();
         // Compare value if correct
         if(Double.parseDouble(bidValue.getText()) > Double.parseDouble(currentItem.getHighest_bid())){
-            yourBid.setText(bidValue.getText());
-            currentItem.setHighest_bid("Your Bid: "+bidValue.getText());
+            yourBid.setText("Your bid: "+bidValue.getText());
+            currentItem.setHighest_bid(bidValue.getText());
             try {
                 dataOutputStream.writeInt(0);
                 System.out.println("Sending new bid");

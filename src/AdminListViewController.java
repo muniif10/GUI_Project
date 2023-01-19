@@ -130,7 +130,7 @@ public class AdminListViewController {
         stm.setString(1, name);
         ResultSet resultSet = stm.executeQuery();
         resultSet.next();
-        return new Item_Bid(String.valueOf(resultSet.getInt(1)), resultSet.getString(2), resultSet.getString(3), resultSet.getString(6));
+        return new Item_Bid(String.valueOf(resultSet.getInt(1)), resultSet.getString(2), resultSet.getString(4), resultSet.getString(6));
     }
 
     @FXML
@@ -162,7 +162,8 @@ public class AdminListViewController {
             }
 
             try {
-                currentList.add(getQueryItem(nameTF.getText()));
+                currentList.setAll(getQueryItemAll());
+//                currentList.add(getQueryItem(nameTF.getText()));
             } catch (SQLException ex) {
                 throw new RuntimeException(ex);
             }
